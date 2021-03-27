@@ -35,6 +35,14 @@ AC_PROG_CC
 
 AC_GNU_SOURCE
 
+# add the current directory (i.e. from where ./configure was called) to the
+# include path do that the files created by ./configure are found. This
+# is (only) needed for VPATH builds since otherwise the directory from which
+# ./configure is run is the same as the directory where ./configure places
+# its output files (i.e. directory '.').
+#
+CXXFLAGS="$CXXFLAGS -I $(pwd)"
+
 ##############################################################################
 # Checks for header files.
 #
@@ -209,7 +217,7 @@ else
     fi
 fi
 
-# make HAVE_GTK3 visible im Makefile.am
+# make HAVE_GTK3 visible in Makefile.am
 AM_CONDITIONAL(HAVE_GTK3, test "x$HAVE_gtk3" = xyes)
 
 # make HAVE_GTK3 visible im config.h
@@ -692,22 +700,44 @@ AC_OUTPUT
 
 echo
 
-# create src/buildtag.hh
+# create buildtag.hh and set apl_top to the directory that contains buildtag.sh
 #
-echo "configure: creating $srcdir/src//buildtag.hh"
-cd $srcdir/src ; . ./buildtag ; cd ..
+echo "configure: creating buildtag.hh..."
+apl_top=""
+for f in "." ".." "../.." "../../.."  "../../../.."
+do
+   if test -f "$f/buildtag.sh"
+   then
+      apl_top="$f"
+      source "$f/buildtag.sh"
+      abs_apl_top=$(readlink -f "$apl_top")
+   fi
+done
+
+if test -z "$apl_top"
+then
+   echo "configure: *** could not find top-level GNU APL directory, using '.'"
+   apl_top="."
+else
+   echo "configure: top-level apl directory is: $abs_apl_top"
+fi
 
 # create src/makefile.h
 #
-echo "configure: creating $srcdir/src/makefile.h"
-rm -f $srcdir/src/makefile.h
-make -C $srcdir/src makefile.h >/dev/null
+echo "configure: creating $abs_apl_top/makefile.h ..."
+if test -f "$apl_top/makefile.h"
+then
+   echo "configure: removing old $apl_top/makefile.h"
+   rm -f "$apl_top/makefile.h"
+fi
+make makefile.h >/dev/null
+echo "#define CONFIGURE_ARGS         xSTR($0 $ac_configure_args)
+" >> makefile.h
 
-# remember how ./configure was called
-echo "configure: creating $srcdir/src/configure_args.cc"
-echo "extern const char * configure_args;" > $srcdir/src/configure_args.cc
-echo "const char * configure_args = \
-              \"$0 $ac_configure_args\";" >> $srcdir/src/configure_args.cc
+if test "$apl_top" != "."   # vpath build
+then
+   cp makefile.h "$apl_top"/makefile.h
+fi
 
 # summary
   echo " "
@@ -724,7 +754,4 @@ fi
   echo "      installation appears to be missing or incomplete (see details above)"
   echo " "
 fi
-
-echo "configure: saving configure options in $srcdir/configure_options"
-echo "$configure_options" > $srcdir/configure_options
 

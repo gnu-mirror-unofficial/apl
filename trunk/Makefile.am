@@ -8,6 +8,9 @@ SUBDIRS		+= build doc erlang gnu-apl.d HOWTOs
 SUBDIRS		+= src support-files tools websock
 DIST_SUBDIRS	= $(SUBDIRS) rpm debian
 
+dist_noinst_SCRIPTS = buildtag.sh
+# distcleancheck_listfile = buildtag.sh
+
 dist_doc_DATA = README				\
 		README-1-prerequisites		\
 		README-2-configure		\
@@ -75,7 +78,6 @@ SYNC:	DIST
 	tar xvzf apl-$(VERSION).tar.gz
 	rm -f apl-$(VERSION)/src/makefile.h
 	rm -f apl-$(VERSION)/src/buildtag.hh
-	rm -f apl-$(VERSION)/src/configure_args.cc
 	cp -a apl-$(VERSION)/* ../savannah-repo-apl/trunk/
 	echo "exported from SVN version " `svnversion` > \
     ../savannah-repo-apl/trunk/exported_from
@@ -89,7 +91,7 @@ EXPO:
 	tools/check_src
 	svn -m "auto-commit by make EXPO, local SVN: `svnversion`" commit
 	svn update
-	cd src; source ./buildtag
+	source ./buildtag.sh
 	svn -m "auto-commit by make EXPO" commit
 	./configure --disable-maintainer-mode
 	make all
@@ -102,7 +104,7 @@ EXPO:
 .PHONY:	EXPO1
 EXPO1:
 	tools/check_src
-	cd src; source buildtag
+	source buildtag.sh
 	./configure --disable-maintainer-mode
 	make
 	make dist
@@ -141,4 +143,19 @@ EXTRA_DIST = config.rpath m4/ChangeLog
 git-pull:
 	make -C src $@
 	make -C wslib5 $@
+
+makefile.h:
+	@echo "/* this makefile.h exports some paths known by"     > $@
+	@echo "   Makefile. See chapter 20.5 of the autoconf"     >> $@
+	@echo "   manual (keyword: "dedicated header file")."     >> $@
+	@echo " */"                                               >> $@
+	@echo "#define xSTR(x) #x"                                >> $@
+	@echo "#define Makefile__bindir     xSTR(${bindir})"      >> $@
+	@echo "#define Makefile__docdir     xSTR(${docdir})"      >> $@
+	@echo "#define Makefile__sysconfdir xSTR(${sysconfdir})"  >> $@
+	@echo "#define Makefile__pkglibdir  xSTR(${pkglibdir})"   >> $@
+	@echo "#define Makefile__localedir  xSTR(${localedir})"   >> $@
+	@echo "#define Makefile__srcdir     xSTR(${abs_srcdir})"  >> $@
+	@echo "#define Makefile__host_os    xSTR(${host_os})"     >> $@
+	@echo ""                                                  >> $@
 

@@ -1,7 +1,7 @@
 
 #
 # this script writes a build tag into file buildtag.hh
-# it is source'd by ../configure
+# it is being source'd by ./configure
 #
 
 if [ -z `which svnversion` ]
@@ -10,28 +10,29 @@ then
    return 0
 fi
 
-SVNINFO=`svnversion`
+SVNINFO=$(svnversion)
 if [ "$SVNINFO" = "Unversioned directory" ]
 then
-   echo "*** current directory is not a svn checkout: keeping old buildtag"
+   echo "*** current directory is not an SVN checkout: keeping old buildtag"
    return 0
 fi
 
-if [ -z `which svn` ]
+if [ -z $(which svn) ]
 then
-   echo "*** subversion not installed: using old buildtag"
+   echo "*** subversion not installed: keeping old buildtag"
    return 0
 fi
 
 PACKAGE_NAME=$1
 PACKAGE_VERSION=$2
 
-ARCHIVE_SVNINFO=`svn info Archive.cc | grep "Last Changed Rev" \
-                                     | awk -F : '{print $2;}'`
-CONFIGURE_OPTS="unknown ./configure options (no config.status)"
-if [ -x ../config.status ]
+ARCHIVE_SVNINFO=`svn info "$apl_top"/src/Archive.cc | grep "Last Changed Rev" \
+                                                    | awk -F : '{print $2;}'`
+
+CONFIGURE_OPTS="unknown ./configure options (no config.status file)"
+if [ -x ./config.status ]
 then
-    CONFIGURE_OPTS=`../config.status -V | \
+    CONFIGURE_OPTS=`./config.status -V  | \
                     grep "with options" | \
                     awk -F\" '{print $2;}'`
     if [ "$CONFIGURE_OPTS" == "" ]

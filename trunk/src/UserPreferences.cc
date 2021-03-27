@@ -24,11 +24,7 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "../config.h"
-
 #include "buildtag.hh"
-static const char * build_tag[] = { BUILDTAG, 0 };
-extern const char * configure_args;
 
 #include "Bif_OPER2_INNER.hh"
 #include "Bif_OPER2_OUTER.hh"
@@ -36,7 +32,6 @@ extern const char * configure_args;
 #include "IO_Files.hh"
 #include "InputFile.hh"
 #include "LibPaths.hh"
-#include "makefile.h"
 #include "Output.hh"
 #include "ScalarFunction.hh"
 #include "UserPreferences.hh"
@@ -44,6 +39,7 @@ extern const char * configure_args;
 
 #include "Value.hh"
 
+static const char * build_tag[] = { BUILDTAG, 0 };
 UserPreferences uprefs;
 
 /// CYGWIN defines _B
@@ -976,7 +972,7 @@ UserPreferences::show_configure_options()
    << endl
    << "how ./configure was (probably) called:" << endl
    << "--------------------------------------" << endl
-   << "    " << configure_args << endl
+   << "    " << CONFIGURE_ARGS << endl
    << endl;
 
    show_version(CERR);
